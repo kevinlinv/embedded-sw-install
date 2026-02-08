@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Child (service worker)</title>
+    <style>
+      body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #fefaf4;
+        color: #1b1b1b;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 0 0 12px;
+      }
+      .status {
+        margin-top: 12px;
+        padding: 12px;
+        background: #fff4dc;
+        border: 1px solid #f2c985;
+        border-radius: 10px;
+      }
+      code {
+        background: #f2e8d9;
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+      button {
+        margin-top: 12px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid #c6b48e;
+        background: #f6d8a7;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Child page (HTTPS)</h1>
+    <p>
+      This page attempts to register a service worker when loaded. It should be
+      hosted on HTTPS (for GitHub Pages) while the parent page stays on
+      <code>http://localhost</code>.
+    </p>
+    <div class="status" id="status">Waiting to register service worker...</div>
+    <button id="register">Register service worker</button>
+    <button id="check">Check registration</button>
+    <button id="unregister">Unregister service worker</button>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const registerBtn = document.getElementById("register");
+      const checkBtn = document.getElementById("check");
+      const unregisterBtn = document.getElementById("unregister");
+
+      const report = (message, level = "info") => {
+        const prefix = level === "error" ? "Error:" : "Info:";
+        statusEl.textContent = `${prefix} ${message}`;
+      };
+
+      const registerServiceWorker = async () => {
+        if (!("serviceWorker" in navigator)) {
+          report("Service workers are not supported in this browser.", "error");
+          return;
+        }
+
+        try {
+          const scope = new URL("./", window.location.href).pathname;
+          const registration = await navigator.serviceWorker.register("./sw.js", {
+            scope,
+          });
+          report(
+            `Registered. Scope: ${registration.scope}. Active: ${Boolean(
+              registration.active
+            )}`
+          );
+        } catch (error) {
+          report(error.message || "Registration failed.", "error");
+        }
+      };
+
+      const checkRegistration = async () => {
+        if (!("serviceWorker" in navigator)) {
+          report("Service workers are not supported in this browser.", "error");
+          return;
+        }
+
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (!registration) {
+            report("No registration found yet.", "error");
+            return;
+          }
+
+          report(
+            `Found registration. Scope: ${registration.scope}. Active: ${Boolean(
+              registration.active
+            )}`
+          );
+        } catch (error) {
+          report(error.message || "Lookup failed.", "error");
+        }
+      };
+
+      const unregisterServiceWorker = async () => {
+        if (!("serviceWorker" in navigator)) {
+          report("Service workers are not supported in this browser.", "error");
+          return;
+        }
+
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (!registration) {
+            report("No registration found to unregister.", "error");
+            return;
+          }
+
+          const success = await registration.unregister();
+          report(
+            success ? "Service worker unregistered." : "Unregister failed.",
+            success ? "info" : "error"
+          );
+        } catch (error) {
+          report(error.message || "Unregister failed.", "error");
+        }
+      };
+
+      registerBtn.addEventListener("click", registerServiceWorker);
+      checkBtn.addEventListener("click", checkRegistration);
+      unregisterBtn.addEventListener("click", unregisterServiceWorker);
+    </script>
+  </body>
+</html>
