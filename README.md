@@ -28,3 +28,13 @@ This project helps you test registering a service worker from a different origin
 - The child page should register a service worker successfully on HTTPS.
 - The parent page stays on HTTP (localhost) and only embeds the child page via iframe.
 - Service worker registration is scoped to the child origin and should not affect the parent.
+
+## Note on third-party partitioning (Chrome)
+
+When the child page is embedded cross-site (for example, `http://localhost` ->
+`https://<user>.github.io`), Chrome partitions storage in third-party contexts.
+Service worker registrations created inside the iframe can become partitioned
+and may not control top-level tabs for the same child origin. There is no way
+for the parent site to override this behavior for end users. To avoid it, host
+the parent and child on the same site/origin or register the service worker in
+the child as a top-level page.
